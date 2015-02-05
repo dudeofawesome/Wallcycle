@@ -24,9 +24,16 @@ struct Wallpaper {
     var fit:Fit
 }
 
+struct Monitor {
+    var screen:NSScreen
+    var position:Vector2
+}
+
+struct ScreenSetup {
+    var monitors:[Monitor] = []
+}
+
 public class Wallcycle {
-    var leftScreen:NSScreen
-    var rightScreen:NSScreen
     var workspace:NSWorkspace
     let SWITCHTIME:Double = 1 //15 * 60
     let FOLDERPATH:String = "/Volumes/Files/Pictures/Wallpapers/"
@@ -60,8 +67,10 @@ public class Wallcycle {
     }
 
     init() {
-        leftScreen = NSScreen.screens()?[0] as NSScreen
-        rightScreen = NSScreen.screens()?[1] as NSScreen
+        for screen in NSScreen.screens() {
+            monitors.append(screen: screen as NSScreen, position: Vector2(x: 0, y: 0))
+        }
+        
         workspace = NSWorkspace.sharedWorkspace()
         
         let fileManager = NSFileManager.defaultManager()
@@ -82,7 +91,7 @@ public class Wallcycle {
         }
         
 //        NSTimer.scheduledTimerWithTimeInterval(SWITCHTIME, target: self, selector: "update:", userInfo: nil, repeats: true)
-        // TODO this should work, but it doesn't :/
+        // TODO this should work, but it doesn't :/ perhaps it doens't work because the main thread ends here
 //        let myTimer = NSTimer(timeInterval: SWITCHTIME, target: self, selector: "update", userInfo: nil, repeats: true)
 //        NSRunLoop.currentRunLoop().addTimer(myTimer, forMode: NSRunLoopCommonModes)
         
