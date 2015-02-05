@@ -34,9 +34,10 @@ public class Wallcycle {
     var workspace:NSWorkspace
     let SWITCHTIME:Double = 1 //15 * 60
     let FOLDERPATH:String = "/Volumes/Files/Pictures/Wallpapers/"
+    var fm:NSFileManager
     
     var currentWallpaper:Int = 0
-    var randomize:Bool = false
+    var randomize:Bool = true
     var wallpapers:[Wallpaper] = []
     var monitors:[Monitor] = []
     var totalRealestate:Vector2 = Vector2(x:0, y:0)
@@ -56,13 +57,13 @@ public class Wallcycle {
     }
     
     func setWallpaper () {
+        fm.removeItemAtPath(NSTemporaryDirectory().stringByAppendingPathComponent("split-walls"), error: nil)
         let wallpaper = wallpapers[currentWallpaper]
         var imgurl:NSURL = NSURL.fileURLWithPath(wallpaper.path)!
         var error:NSError?
         
         if (wallpaper.multiMonitor) {
-            // TODO make this actually apply mutli monitor wallpapers
-            // TODO: we're gonna want to crop images, and we'll use NSImageRep.setSize(...) for that
+            // TODO make this apply non proportional mutli monitor wallpapers
             let wallpaperRatio = wallpaper.size.x / wallpaper.size.y
             let monitorRatio = totalRealestate.x / totalRealestate.y
             if (wallpaperRatio == monitorRatio) {
@@ -70,15 +71,22 @@ public class Wallcycle {
                 var newImages:[NSURL] = []
                 let splitWidth:Int = wallpaper.size.x / monitors.count
                 for i in 0..<monitors.count {
-                    //original.setSize((i * splitWidth) + ((i + 1) * splitWidth), original.size.height)
                     let rect = NSRect(x: splitWidth * i, y: 0, width: splitWidth, height: Int(original.size.height))
                     let img:NSImage = imageResize(original, rect)
                     println(rect)
-                    let url = NSURL.fileURLWithPath("screen" + String(i) + ".png");
+                    let date = NSDate()
+                    let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
+                    let timestamp:String = String(comps.minute) + String(comps.second)
+                    let name:String = ("screen" + timestamp + String(i) + ".png")
+                    let url = NSURL.fileURLWithPath(name);
                     let data:NSData = NSData()
+                    // TODO: make this not further compress the image (tut saved in bookmarks)
                     img.TIFFRepresentation?.writeToURL(url!, atomically: false)
-                    //NSFileManager.copyItemAtPath(url!, )
-                    workspace.setDesktopImageURL(url!, forScreen: monitors[i].screen, options: nil, error: &error)
+                    let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory()! + "/" + name)!
+                    fm.moveItemAtURL(url!, toURL: destination, error: nil)
+                    println(destination)
+                    
+                    workspace.setDesktopImageURL(destination, forScreen: monitors[i].screen, options: nil, error: &error)
                     newImages.append(url!)
                 }
             }
@@ -102,8 +110,8 @@ public class Wallcycle {
         
         workspace = NSWorkspace.sharedWorkspace()
         
-        let fileManager = NSFileManager.defaultManager()
-        let enumerator:NSDirectoryEnumerator = fileManager.enumeratorAtPath(FOLDERPATH)!
+        fm = NSFileManager.defaultManager()
+        let enumerator:NSDirectoryEnumerator = fm.enumeratorAtPath(FOLDERPATH)!
         
         while let element = enumerator.nextObject() as? String {
             var multiMonitor:Bool
@@ -124,6 +132,17 @@ public class Wallcycle {
 //        let myTimer = NSTimer(timeInterval: SWITCHTIME, target: self, selector: "update", userInfo: nil, repeats: true)
 //        NSRunLoop.currentRunLoop().addTimer(myTimer, forMode: NSRunLoopCommonModes)
         update()
+    }
+    
+    func createTempDirectory() -> String? {
+        let tempDirectoryTemplate = NSTemporaryDirectory().stringByAppendingPathComponent("split-walls")
+        var err: NSErrorPointer = nil
+        
+        if fm.createDirectoryAtPath(tempDirectoryTemplate, withIntermediateDirectories: true, attributes: nil, error: err) {
+            return tempDirectoryTemplate
+        } else {
+            return nil
+        }
     }
 }
 
