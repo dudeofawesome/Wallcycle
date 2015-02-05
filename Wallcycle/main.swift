@@ -71,7 +71,9 @@ public class Wallcycle {
                 let splitWidth:Int = wallpaper.size.x / monitors.count
                 for i in 0..<monitors.count {
                     //original.setSize((i * splitWidth) + ((i + 1) * splitWidth), original.size.height)
-                    let img:NSImage = imageResize(original, NSSize(width:(Int(i) * splitWidth) + ((Int(i) + 1) * splitWidth), height:Int(original.size.height)))
+                    let rect = NSRect(x: splitWidth * i, y: 0, width: splitWidth, height: Int(original.size.height))
+                    let img:NSImage = imageResize(original, rect)
+                    println(rect)
                     let url = NSURL.fileURLWithPath("screen" + String(i) + ".png");
                     let data:NSData = NSData()
                     img.TIFFRepresentation?.writeToURL(url!, atomically: false)
@@ -125,14 +127,15 @@ public class Wallcycle {
     }
 }
 
-func imageResize (source:NSImage, size:NSSize) -> NSImage {
+func imageResize (source:NSImage, size:NSRect) -> NSImage {
     var sourceImage:NSImage = source
 
-    var smallImage:NSImage = NSImage.init(size:size)
+    var smallImage:NSImage = NSImage.init(size:NSSize(width:size.size.width, height:size.size.height))
     smallImage.lockFocus()
     //sourceImage.setSize(size)
     //currentContext.setImageInterpolation(NSImageInterpolationHigh)
-    sourceImage.drawAtPoint(NSPoint(x:0, y:0), fromRect:CGRectMake(0, 0, size.width, size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
+//    sourceImage.drawAtPoint(NSPoint(x:size.origin.x, y:size.origin.y), fromRect:CGRectMake(0, 0, size.size.width, size.size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
+    sourceImage.drawAtPoint(NSPoint(x:0, y:0), fromRect:CGRectMake(size.origin.x, size.origin.y, size.size.width, size.size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
     smallImage.unlockFocus()
     return smallImage
  }
