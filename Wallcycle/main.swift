@@ -35,6 +35,7 @@ public class Wallcycle {
     let SWITCHTIME:Double = 1 //15 * 60
     let FOLDERPATH:String = "/Volumes/Files/Pictures/Wallpapers/"
     var fm:NSFileManager
+    let imgProc:ImageProcessor = ImageProcessor()
     
     var currentWallpaper:Int = 0
     var randomize:Bool = true
@@ -59,90 +60,18 @@ public class Wallcycle {
     func setWallpaper () {
         fm.removeItemAtPath(NSTemporaryDirectory().stringByAppendingPathComponent("wallcycle/split-walls"), error: nil)
         let wallpaper = wallpapers[currentWallpaper]
-        var imgurl:NSURL = NSURL.fileURLWithPath(wallpaper.path)!
         var error:NSError?
+        var paths:[NSURL] = [NSURL.fileURLWithPath(wallpaper.path)!]
         
         if (wallpaper.multiMonitor && monitors.count > 1) {
-            // TODO: make this apply non proportional mutli monitor wallpapers
-            let wallpaperRatio = wallpaper.size.x / wallpaper.size.y
-            let monitorRatio = totalRealestate.x / totalRealestate.y
-            // TODO: test first condition w/ <= to see if I can remove the 2nd elif
-            if (wallpaperRatio == monitorRatio) {
-                var original:NSImage = NSImage(contentsOfFile: wallpaper.path)!
-                var newImages:[NSURL] = []
-                let splitWidth:Int = wallpaper.size.x / monitors.count
-                for i in 0..<monitors.count {
-                    let rect = NSRect(x: splitWidth * i, y: 0, width: splitWidth, height: Int(original.size.height))
-                    let img:NSImage = imageResize(original, rect)
-                    println(rect)
-                    let date = NSDate()
-                    let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
-                    let timestamp:String = String(comps.minute) + String(comps.second)
-                    let name:String = ("screen" + timestamp + String(i) + ".png")
-                    let url = NSURL.fileURLWithPath(name);
-                    let data:NSData = NSData()
-                    // TODO: make this not further compress the image (tut saved in bookmarks)
-                    img.TIFFRepresentation?.writeToURL(url!, atomically: false)
-                    let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory()! + "/" + name)!
-                    fm.moveItemAtURL(url!, toURL: destination, error: nil)
-                    println(destination)
-                    
-                    workspace.setDesktopImageURL(destination, forScreen: monitors[i].screen, options: nil, error: &error)
-                    newImages.append(url!)
-                }
-            } else if (wallpaperRatio > monitorRatio) {
-                var original:NSImage = NSImage(contentsOfFile: wallpaper.path)!
-                var newImages:[NSURL] = []
-                let splitWidth:Int = wallpaper.size.x / monitors.count
-                let padding:Int = (wallpaper.size.x % totalRealestate.x) / 2
-                for i in 0..<monitors.count {
-                    let rect = NSRect(x: splitWidth * i + padding, y: 0, width: splitWidth, height: Int(original.size.height))
-                    let img:NSImage = imageResize(original, rect)
-                    println(rect)
-                    let date = NSDate()
-                    let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
-                    let timestamp:String = String(comps.minute) + String(comps.second)
-                    let name:String = ("screen" + timestamp + String(i) + ".png")
-                    let url = NSURL.fileURLWithPath(name);
-                    let data:NSData = NSData()
-                    // TODO: make this not further compress the image (tut saved in bookmarks)
-                    img.TIFFRepresentation?.writeToURL(url!, atomically: false)
-                    let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory()! + "/" + name)!
-                    fm.moveItemAtURL(url!, toURL: destination, error: nil)
-                    println(destination)
-                    
-                    workspace.setDesktopImageURL(destination, forScreen: monitors[i].screen, options: nil, error: &error)
-                    newImages.append(url!)
-                }
-            } else if (wallpaperRatio < monitorRatio) {
-                var original:NSImage = NSImage(contentsOfFile: wallpaper.path)!
-                var newImages:[NSURL] = []
-                let splitWidth:Int = wallpaper.size.x / monitors.count
-                let padding:Int = (wallpaper.size.y % totalRealestate.y) / 2
-                for i in 0..<monitors.count {
-                    let rect = NSRect(x: splitWidth * i, y: padding, width: splitWidth, height: Int(original.size.height) - padding)
-                    let img:NSImage = imageResize(original, rect)
-                    println(rect)
-                    let date = NSDate()
-                    let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
-                    let timestamp:String = String(comps.minute) + String(comps.second)
-                    let name:String = ("screen" + timestamp + String(i) + ".png")
-                    let url = NSURL.fileURLWithPath(name);
-                    let data:NSData = NSData()
-                    // TODO: make this not further compress the image (tut saved in bookmarks)
-                    img.TIFFRepresentation?.writeToURL(url!, atomically: false)
-                    let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory()! + "/" + name)!
-                    fm.moveItemAtURL(url!, toURL: destination, error: nil)
-                    println(destination)
-                    
-                    workspace.setDesktopImageURL(destination, forScreen: monitors[i].screen, options: nil, error: &error)
-                    newImages.append(url!)
-                }
-            }
-        } else {
-            for monitor in monitors {
-                workspace.setDesktopImageURL(imgurl, forScreen: monitor.screen, options: nil, error: &error)
-            }
+            paths = imgProc.cropToFit(fm, monitors: monitors, totalRealestate: totalRealestate, wallpaper: wallpaper)
+        }
+        if (wallpaper.special == Wallpaper.Special.CHROMA) {
+            paths = imgProc.chromaShift(fm, paths: paths)
+        }
+        
+        for i:Int in 0..<monitors.count {
+            workspace.setDesktopImageURL(paths[((i < paths.count) ? i : paths.count - 1)], forScreen: monitors[i].screen, options: nil, error: &error)
         }
     }
 
@@ -164,6 +93,8 @@ public class Wallcycle {
         while let element = enumerator.nextObject() as? String {
             var multiMonitor:Bool = false
             var special:Wallpaper.Special = Wallpaper.Special.STANDARD
+            // TODO: change multimonitor detection to actually compare the wallpaper w/ the monitors, that way we won't try to apply a multimonitor wallpaper
+            //          innapropriately on an ultra-widescreen monitor
             if (element.lowercaseString.rangeOfString("mm-") != nil) {
                 multiMonitor = true
             }
@@ -178,35 +109,114 @@ public class Wallcycle {
         }
         
 //        NSTimer.scheduledTimerWithTimeInterval(SWITCHTIME, target: self, selector: "update:", userInfo: nil, repeats: true)
-        // TODO this should work, but it doesn't :/ perhaps it doens't work because the main thread ends gets killed here?
+        // TODO: this should work, but it doesn't :/ perhaps it doens't work because the main thread ends gets killed here?
 //        let myTimer = NSTimer(timeInterval: SWITCHTIME, target: self, selector: "update", userInfo: nil, repeats: true)
 //        NSRunLoop.currentRunLoop().addTimer(myTimer, forMode: NSRunLoopCommonModes)
         update()
     }
-    
-    func createTempDirectory() -> String? {
-        let tempDirectoryTemplate = NSTemporaryDirectory().stringByAppendingPathComponent("wallcycle/split-walls")
-        var err: NSErrorPointer = nil
-        
-        if fm.createDirectoryAtPath(tempDirectoryTemplate, withIntermediateDirectories: true, attributes: nil, error: err) {
-            return tempDirectoryTemplate
-        } else {
-            return nil
+}
+
+struct ImageProcessor {
+    func cropToFit (fm:NSFileManager, monitors:[Monitor], totalRealestate:Vector2, wallpaper:Wallpaper) -> [NSURL] {
+        var paths:[NSURL] = []
+        let wallpaperRatio:Double = Double(wallpaper.size.x) / Double(wallpaper.size.y)
+        let monitorRatio:Double = Double(totalRealestate.x) / Double(totalRealestate.y)
+        if (wallpaperRatio <= monitorRatio) {
+            var original:NSImage = NSImage(contentsOfFile: wallpaper.path)!
+            let splitWidth:Int = wallpaper.size.x / monitors.count
+            for i in 0..<monitors.count {
+                let rect = NSRect(x: splitWidth * i, y: 0, width: splitWidth, height: Int(wallpaper.size.y))
+                println(rect)
+                let img:NSImage = imageResize(original, size: rect)
+                let date = NSDate()
+                let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
+                let timestamp:String = String(comps.minute) + String(comps.second)
+                let name:String = ("screen" + timestamp + String(i) + ".png")
+                let url = NSURL.fileURLWithPath(name);
+                let data:NSData = NSData()
+                // TODO: make this not further compress the image (tut saved in bookmarks)
+                img.TIFFRepresentation?.writeToURL(url!, atomically: false)
+                let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory(fm)! + "/" + name)!
+                fm.moveItemAtURL(url!, toURL: destination, error: nil)
+                paths.append(destination)
+            }
+        } else if (wallpaperRatio > monitorRatio) {
+            var original:NSImage = NSImage(contentsOfFile: wallpaper.path)!
+            let splitWidth:Int = (totalRealestate.x / monitors.count) * (wallpaper.size.y / totalRealestate.y)
+            let padding:Int = (wallpaper.size.x % totalRealestate.x) / 2
+            for i in 0..<monitors.count {
+                let rect = NSRect(x: splitWidth * i + padding, y: 0, width: splitWidth, height: Int(original.size.height))
+                let img:NSImage = imageResize(original, size: rect)
+                println(rect)
+                let date = NSDate()
+                let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
+                let timestamp:String = String(comps.minute) + String(comps.second)
+                let name:String = ("screen" + timestamp + String(i) + ".png")
+                let url = NSURL.fileURLWithPath(name);
+                let data:NSData = NSData()
+                // TODO: make this not further compress the image (tut saved in bookmarks)
+                img.TIFFRepresentation?.writeToURL(url!, atomically: false)
+                let destination:NSURL = NSURL(fileURLWithPath: createTempDirectory(fm)! + "/" + name)!
+                fm.moveItemAtURL(url!, toURL: destination, error: nil)
+                println(destination)
+                paths.append(destination)
+            }
         }
+        return paths
+    }
+    
+    func chromaShift (fm:NSFileManager, paths:[NSURL]) -> [NSURL] {
+        var newPaths:[NSURL] = []
+        for i:Int in 0..<paths.count {
+            var original:NSImage = NSImage(contentsOfURL: paths[i])!
+            var shifted:NSImage = shiftHue(original, hue: 180)
+            // TODO: make sure we aren't overwriting the original image in the wallpapers dir
+            let date = NSDate()
+            let comps = NSCalendar.currentCalendar().components(.CalendarUnitMinute | .CalendarUnitSecond, fromDate: date)
+            let timestamp:String = String(comps.minute) + String(comps.second)
+            let name:String = ("screen" + timestamp + String(i) + ".png")
+            var newPath:NSURL = NSURL(fileURLWithPath: createTempDirectory(fm)! + "/" + name)!
+            shifted.TIFFRepresentation?.writeToURL(newPath, atomically: false)
+            newPaths.append(newPath)
+        }
+        
+        return newPaths
+    }
+    
+    func imageResize (source:NSImage, size:NSRect) -> NSImage {
+        var smallImage:NSImage = NSImage.init(size:NSSize(width:size.size.width, height:size.size.height))
+        smallImage.lockFocus()
+        //currentContext.setImageInterpolation(NSImageInterpolationHigh)
+        source.drawAtPoint(NSPoint(x:0, y:0), fromRect:CGRectMake(size.origin.x, size.origin.y, size.size.width, size.size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
+        smallImage.unlockFocus()
+        return smallImage
+    }
+    
+    func shiftHue (img:NSImage, hue:Float) -> NSImage {
+        var inputImage:CIImage = CIImage(data: img.TIFFRepresentation)
+        
+        var hueAdjust:CIFilter = CIFilter(name:"CIHueAdjust")
+        hueAdjust.setValue(inputImage, forKey: "inputImage")
+        hueAdjust.setValue(hue, forKey: "inputAngle")
+        var outputImage:CIImage = hueAdjust.outputImage
+        
+        var resultImage:NSImage = NSImage(size: outputImage.extent().size)
+        var rep:NSCIImageRep = NSCIImageRep(CIImage: outputImage)
+        resultImage.addRepresentation(rep);
+        
+        return resultImage;
     }
 }
 
-func imageResize (source:NSImage, size:NSRect) -> NSImage {
-    var sourceImage:NSImage = source
-
-    var smallImage:NSImage = NSImage.init(size:NSSize(width:size.size.width, height:size.size.height))
-    smallImage.lockFocus()
-    //sourceImage.setSize(size)
-    //currentContext.setImageInterpolation(NSImageInterpolationHigh)
-//    sourceImage.drawAtPoint(NSPoint(x:size.origin.x, y:size.origin.y), fromRect:CGRectMake(0, 0, size.size.width, size.size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
-    sourceImage.drawAtPoint(NSPoint(x:0, y:0), fromRect:CGRectMake(size.origin.x, size.origin.y, size.size.width, size.size.height), operation:NSCompositingOperation.CompositeCopy, fraction:1.0)
-    smallImage.unlockFocus()
-    return smallImage
- }
+func createTempDirectory(fm:NSFileManager) -> String? {
+    let tempDirectoryTemplate = NSTemporaryDirectory().stringByAppendingPathComponent("wallcycle/split-walls")
+    var err: NSErrorPointer = nil
+    
+    if fm.createDirectoryAtPath(tempDirectoryTemplate, withIntermediateDirectories: true, attributes: nil, error: err) {
+        return tempDirectoryTemplate
+    } else {
+        return nil
+    }
+}
 
 let wallcycle:Wallcycle = Wallcycle()
