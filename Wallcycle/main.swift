@@ -32,8 +32,8 @@ struct Monitor {
 
 public class Wallcycle {
     var workspace:NSWorkspace
-    let SWITCHTIME:Double = 1 //15 * 60
-    let FOLDERPATH:String = "/Volumes/Files/Pictures/Wallpapers/"
+    var SWITCHTIME:Double = 15 * 60
+    var FOLDERPATH:String = "/Volumes/Files/Pictures/Wallpapers/"
     var fm:NSFileManager
     let imgProc:ImageProcessor = ImageProcessor()
     
@@ -79,6 +79,53 @@ public class Wallcycle {
     }
 
     init() {
+        // TODO: load prefs
+        let defaults = NSUserDefaults.standardUserDefaults()
+        if defaults.objectForKey("FolderPath") != nil {
+            FOLDERPATH = defaults.objectForKey("FolderPath") as String
+        } else {
+            println("Where are your wallpapers stored? (You can just drag the folder in)")
+            FOLDERPATH = input()
+        }
+        if defaults.objectForKey("Randomize") != nil {
+            randomize = defaults.objectForKey("Randomize") as Bool
+        }
+        if defaults.objectForKey("SwitchTime") != nil {
+            SWITCHTIME = defaults.objectForKey("SwitchTime") as Double
+        }
+        
+        for i:Int in 1..<Process.arguments.count {
+            if Process.arguments[i].hasPrefix("-") {
+                switch Process.arguments[i] {
+                    case "-dir":
+                        FOLDERPATH = Process.arguments[i + 1]
+                        break
+                    case "-rand":
+                        switch Process.arguments[i + 1] {
+                            case "true":
+                                randomize = true
+                                break
+                            case "false":
+                                randomize = false
+                                break
+                            default:
+                                break
+                        }
+                        break
+                    case "-time":
+                        SWITCHTIME = (Process.arguments[i + 1] as NSString).doubleValue
+                        break
+                    default:
+                        break
+                }
+            }
+        }
+        // TODO: save prefs
+        defaults.setObject(FOLDERPATH, forKey: "FolderPath")
+        defaults.setObject(randomize, forKey: "Randomize")
+        defaults.setObject(SWITCHTIME, forKey: "SwitchTime")
+        defaults.synchronize()
+        
         setLaunchD()
         
         if let screens = NSScreen.screens() {
@@ -95,6 +142,7 @@ public class Wallcycle {
         fm = NSFileManager.defaultManager()
         let enumerator:NSDirectoryEnumerator = fm.enumeratorAtPath(FOLDERPATH)!
         
+        // TODO: switch to only loading the image we are going to use this execution
         while let element = enumerator.nextObject() as? String {
             let path:String = FOLDERPATH + element;
             var img:NSImageRep = NSImageRep.imageRepsWithContentsOfFile(path)?[0] as NSImageRep
@@ -114,19 +162,19 @@ public class Wallcycle {
             wallpapers.append(Wallpaper(path: path, size: Vector2(x: img.pixelsWide, y: img.pixelsHigh), multiMonitor: multiMonitor, special: special))
         }
         
-        let task = NSTask()
-        task.launchPath = "/bin/echo"
-        task.arguments = ["first-argument", "second-argument"]
-        
-        let pipe = NSPipe()
-        task.standardOutput = pipe
-        task.launch()
-        
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output:String = NSString(data: data, encoding: NSUTF8StringEncoding)!
-        
-        print(output)
-        assert(output == "first-argument second-argument\n")
+//        let task = NSTask()
+//        task.launchPath = "/bin/echo"
+//        task.arguments = ["first-argument", "second-argument"]
+//        
+//        let pipe = NSPipe()
+//        task.standardOutput = pipe
+//        task.launch()
+//        
+//        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+//        let output:String = NSString(data: data, encoding: NSUTF8StringEncoding)!
+//        
+//        print(output)
+//        assert(output == "first-argument second-argument\n")
         
         update()
     }
@@ -184,6 +232,7 @@ struct ImageProcessor {
             let name:String = ("screen" + timestamp + String(i) + ".png")
             var newPath:NSURL = NSURL(fileURLWithPath: createTempDirectory(fm)! + "/" + name)!
             images[i].TIFFRepresentation?.writeToURL(newPath, atomically: false)
+            println(newPath)
             paths.append(newPath)
         }
         
@@ -208,6 +257,12 @@ struct ImageProcessor {
 
 func setLaunchD () {
     
+}
+
+func input() -> String {
+    var keyboard = NSFileHandle.fileHandleWithStandardInput()
+    var inputData = keyboard.availableData
+    return NSString(data: inputData, encoding:NSUTF8StringEncoding)!
 }
 
 func createTempDirectory(fm:NSFileManager) -> String? {

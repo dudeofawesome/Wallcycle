@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		ED4A7AAF1A809E1C00DC2971 /* Wallcycle */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Wallcycle; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED4A7AB21A809E1C00DC2971 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		EDBD3D861A8CA4970053EB86 /* launchd.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = launchd.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				ED4A7AB21A809E1C00DC2971 /* main.swift */,
+				EDBD3D861A8CA4970053EB86 /* launchd.plist */,
 			);
 			path = Wallcycle;
 			sourceTree = "<group>";
@@ -233,6 +235,7 @@
 				ED4A7AB81A809E1C00DC2971 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
