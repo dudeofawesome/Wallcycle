@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		ED133D151AB7F3B60065290A /* settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED133D141AB7F3B60065290A /* settings.swift */; };
 		ED4A7AB31A809E1C00DC2971 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4A7AB21A809E1C00DC2971 /* main.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		ED133D131AB7F3190065290A /* settings.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = settings.xib; sourceTree = "<group>"; };
+		ED133D141AB7F3B60065290A /* settings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = settings.swift; sourceTree = "<group>"; };
 		ED4A7AAF1A809E1C00DC2971 /* Wallcycle */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Wallcycle; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED4A7AB21A809E1C00DC2971 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		EDBD3D861A8CA4970053EB86 /* launchd.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = launchd.plist; sourceTree = "<group>"; };
@@ -58,6 +61,8 @@
 		ED4A7AB11A809E1C00DC2971 /* Wallcycle */ = {
 			isa = PBXGroup;
 			children = (
+				ED133D131AB7F3190065290A /* settings.xib */,
+				ED133D141AB7F3B60065290A /* settings.swift */,
 				ED4A7AB21A809E1C00DC2971 /* main.swift */,
 				EDBD3D861A8CA4970053EB86 /* launchd.plist */,
 			);
@@ -120,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ED133D151AB7F3B60065290A /* settings.swift in Sources */,
 				ED4A7AB31A809E1C00DC2971 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

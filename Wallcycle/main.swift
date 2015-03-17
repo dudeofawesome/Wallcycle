@@ -145,21 +145,23 @@ public class Wallcycle {
         // TODO: switch to only loading the image we are going to use this execution
         while let element = enumerator.nextObject() as? String {
             let path:String = FOLDERPATH + element;
-            var img:NSImageRep = NSImageRep.imageRepsWithContentsOfFile(path)?[0] as NSImageRep
-            
-            var multiMonitor:Bool = false
-            var special:Wallpaper.Special = Wallpaper.Special.STANDARD
-            /* TODO: change multimonitor detection to actually compare the wallpaper w/ the monitors, that way we won't try to apply a multimonitor wallpaper
-                      innapropriately on an ultra-widescreen monitor */
-            let wallpaperRatio:Double = Double(img.pixelsWide) / Double(img.pixelsHigh)
-            if (element.lowercaseString.rangeOfString("mm-") != nil || wallpaperRatio > 3.5) {
-                multiMonitor = true
+            let imgs:[NSImageRep] = NSImageRep.imageRepsWithContentsOfFile(path)? as [NSImageRep]
+            if (imgs.count > 0) {
+                var img:NSImageRep = imgs[0] as NSImageRep
+                var multiMonitor:Bool = false
+                var special:Wallpaper.Special = Wallpaper.Special.STANDARD
+                /* TODO: change multimonitor detection to actually compare the wallpaper w/ the monitors, that way we won't try to apply a multimonitor wallpaper
+                innapropriately on an ultra-widescreen monitor */
+                let wallpaperRatio:Double = Double(img.pixelsWide) / Double(img.pixelsHigh)
+                if (element.lowercaseString.rangeOfString("mm-") != nil || wallpaperRatio > 3.5) {
+                    multiMonitor = true
+                }
+                if (element.lowercaseString.rangeOfString("cs-") != nil) {
+                    special = Wallpaper.Special.CHROMA
+                }
+                
+                wallpapers.append(Wallpaper(path: path, size: Vector2(x: img.pixelsWide, y: img.pixelsHigh), multiMonitor: multiMonitor, special: special))
             }
-            if (element.lowercaseString.rangeOfString("cs-") != nil) {
-                special = Wallpaper.Special.CHROMA
-            }
-            
-            wallpapers.append(Wallpaper(path: path, size: Vector2(x: img.pixelsWide, y: img.pixelsHigh), multiMonitor: multiMonitor, special: special))
         }
         
 //        let task = NSTask()
