@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0620"
+   LastUpgradeVersion = "0610"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "ED133D1E1AB8081F0065290A"
+               BlueprintIdentifier = "ED90E4541AB92A3300A5F203"
                BuildableName = "Wallcycle.app"
                BlueprintName = "Wallcycle"
                ReferencedContainer = "container:Wallcycle.xcodeproj">
@@ -28,7 +28,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "ED133D2E1AB8081F0065290A"
+               BlueprintIdentifier = "ED90E4661AB92A3300A5F203"
                BuildableName = "WallcycleTests.xctest"
                BlueprintName = "WallcycleTests"
                ReferencedContainer = "container:Wallcycle.xcodeproj">
@@ -46,7 +46,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "ED133D2E1AB8081F0065290A"
+               BlueprintIdentifier = "ED90E4661AB92A3300A5F203"
                BuildableName = "WallcycleTests.xctest"
                BlueprintName = "WallcycleTests"
                ReferencedContainer = "container:Wallcycle.xcodeproj">
@@ -56,7 +56,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "ED133D1E1AB8081F0065290A"
+            BlueprintIdentifier = "ED90E4541AB92A3300A5F203"
             BuildableName = "Wallcycle.app"
             BlueprintName = "Wallcycle"
             ReferencedContainer = "container:Wallcycle.xcodeproj">
@@ -72,11 +72,10 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "ED133D1E1AB8081F0065290A"
+            BlueprintIdentifier = "ED90E4541AB92A3300A5F203"
             BuildableName = "Wallcycle.app"
             BlueprintName = "Wallcycle"
             ReferencedContainer = "container:Wallcycle.xcodeproj">
@@ -91,11 +90,10 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "ED133D1E1AB8081F0065290A"
+            BlueprintIdentifier = "ED90E4541AB92A3300A5F203"
             BuildableName = "Wallcycle.app"
             BlueprintName = "Wallcycle"
             ReferencedContainer = "container:Wallcycle.xcodeproj">
