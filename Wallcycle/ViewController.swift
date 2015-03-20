@@ -42,7 +42,8 @@ class ViewController: NSViewController {
         openPanel.canCreateDirectories = true
         
         if (openPanel.runModal() == NSOKButton) {
-            txtImageFolder.stringValue = (openPanel.URL?.absoluteString)!
+            let url = openPanel.URL?.absoluteString?.stringByReplacingOccurrencesOfString("file://", withString: "", options: NSStringCompareOptions.LiteralSearch, range: nil)
+            txtImageFolder.stringValue = url!
         }
     }
 
@@ -56,10 +57,13 @@ class ViewController: NSViewController {
 //        window.close()
         
         let wallcycle = Wallcycle()
+        wallcycle.update()
+        NSApplication.sharedApplication().terminate(self)
     }
     
     @IBAction func onBtnCancel(sender: NSButton) {
         //        window.close()
+        NSApplication.sharedApplication().terminate(self)
     }
 }
 
