@@ -107,13 +107,31 @@ public class Wallcycle {
             
             if let screens = NSScreen.screens() {
                 for screen in screens {
-                    monitors.append(Monitor(screen: screen as NSScreen, position: Vector2(x: 0, y: 0), size: Vector2(x: Int(screen.frame.width), y: Int(screen.frame.height))))
+                    monitors.append(Monitor(screen: screen as NSScreen, position: Vector2(x: Int(screen.frame.origin.x), y: Int(screen.frame.origin.y)), size: Vector2(x: Int(screen.frame.width), y: Int(screen.frame.height))))
                     // TODO: this won't work if the screens aren't all aligned perfectly in settings (ie: they have any offset)
-                    totalRealestate.x += Int(screen.frame.width)
                     totalRealestate.y = (Int(screen.frame.height) > totalRealestate.y) ? Int(screen.frame.height) : totalRealestate.y
                 }
             }
-            
+            for i:Int in 1..<monitors.count {
+                if monitors[i].position.x < monitors[i - 1].position.x {
+                    let tmp = monitors[i]
+                    monitors[i] = monitors[i - 1]
+                    monitors[i - 1] = tmp;
+                }
+            }
+        
+            for i:Int in 1..<monitors.count {
+                var x = monitors[i]
+                var j = i
+                while (monitors[j - 1].position.x > x.position.x && j > 0) {
+                    monitors[j] = monitors[j - 1]
+                    j -= 1
+                }
+                monitors[j] = x
+            }
+    
+            totalRealestate.x = monitors[monitors.count - 1].position.x + monitors[monitors.count - 1].size.x
+        
             workspace = NSWorkspace.sharedWorkspace()
             
             fm = NSFileManager.defaultManager()
